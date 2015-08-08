@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Medium Insert Demo</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+	        html, body, h1, h2, h3, p {
+	        	font-family: sans-serif;
+	        	padding: 0;
+	        	margin: 0
+	        }
+	        .editable {
+	        	width: 650px;
+	        	position: relative;
+	        	margin: 10px auto;
+	        }
+        </style>
+        <link rel="stylesheet" type="text/css" href="medium-editor.min.css">
+        <link rel="stylesheet" type="text/css" href="../medium-insert.css">
+    </head>
+    <body>
+        <h1>Medium Editor Insert Demo</h1>
+        <div class="editable" contenteditable="true">
+
+        </div>
+
+        <script type="text/javascript" src="medium-editor.js"></script>
+        <script type="text/javascript" src="../medium-insert.js"></script>
+        <script type="text/javascript" src="s3upload.js"></script>
+        <script>
+        var editor = new MediumEditor('.editable', {
+        	extensions: {
+                    'mediumEditorInsert': new MediumEditorInsert({
+                        uploader: new s3upload()
+                    })
+                }
+        });
+        </script>
+
+    </body>
+</html>

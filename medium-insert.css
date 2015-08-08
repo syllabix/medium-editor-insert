@@ -1,0 +1,68 @@
+#media-opts {
+	position: absolute;
+}
+
+#media-opts.active {
+
+}
+
+#media-opts input {
+	padding: 0;
+    outline-style: none;
+    position: absolute;
+    left: 37px;
+    top: 0;
+    height: 20px;
+    width: 550px;
+}
+
+span.media-placeholder {
+	color: #9badb4;
+}
+
+#media-opts button {
+	float: left;
+	margin-right: 10px;
+	position: relative;
+	font-family: sans-serif;
+    padding: 0 7px 2px;
+    border-radius: 999em;
+    border: 1px solid #2ab5cd;
+    color: #2ab5cd;
+    font-size: 20px;
+    overflow: hidden;
+    background: none;
+    outline-style: none;
+    width: 28px;
+    height: 28px;
+}
+
+.media-opt {
+	opacity: 0;
+	margin-left: -45px;
+	transition: .3s all ease-in-out;
+	z-index: -10;
+}
+
+#media-opts.active .media-opt {
+	opacity: 1.0;
+	margin-left: 0px;
+	z-index: 3;
+}
+
+.media-opt i {
+	position: relative;
+	font-size: 16px;
+    margin-left: -2px;
+    margin-top: 5px;
+    z-index: 1;
+}
+
+#mbtn {
+    transition: transform .2s ease;
+}
+
+#media-opts.active #mbtn {
+	transform: rotate(45deg);
+	padding: 1px 7px 3px;
+}
