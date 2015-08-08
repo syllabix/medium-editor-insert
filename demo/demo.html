@@ -37,7 +37,7 @@
         var editor = new MediumEditor('.editable', {
         	extensions: {
                     'mediumEditorInsert': new MediumEditorInsert({
-                        uploader: new s3upload()
+                        uploader: new s3upload('mybucket')
                     })
                 }
         });

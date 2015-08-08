@@ -21,11 +21,10 @@
 
 	function MediumEditorInsert(options) {
 		var options = options || {};
-		this.uploader = options.uploader || 'no uploader implemented';
+		this.uploader = options.uploader || {};
 
 		this.init = function(mediumEditor) {
 			this.editorNode = mediumEditor.elements[0];
-
 			this.addToolBar();
 			this.base.subscribe('focus', this.positionToolBar.bind(this));
 		    this.base.subscribe('editableInput', this.positionToolBar.bind(this));
@@ -37,7 +36,28 @@
 	  		toolbar: '',
 	  		active: false
 	  	}
+
+	  	this.file = (function(){
+	        var file = document.createElement('input');
+	        file.type = 'file';
+	        file.style.display = 'none';
+	        file.addEventListener('change', this.addImage.bind(this));
+	        document.getElementsByTagName('body')[0].appendChild(file);
+	        return file;
+    	}).bind(this)();
 	}
+
+	MediumEditorInsert.prototype.addImage = function(evt) {
+		if (typeof this.uploader.upload === 'undefined') {
+			console.warn('Uploader has not implemented method upload, falling back to non persisted data uri');
+		} else {
+			this.uploader.upload(evt);
+		}
+	};
+
+	MediumEditorInsert.prototype.selectImage = function() {
+		this.file.click();
+	};
 
 	MediumEditorInsert.prototype.addToolBar = function() {
 		var editableCoords = this.editorNode.getBoundingClientRect();
@@ -58,6 +78,7 @@
 		var imgBtn = document.createElement('button');
 		imgBtn.className = 'media-opt';
 		imgBtn.innerHTML = '<i class="icon-file-img"></i>';
+		imgBtn.addEventListener('click', this.selectImage.bind(this));
 		mediaOpts.appendChild(imgBtn);
 
 		var videoBtn = document.createElement('button');
