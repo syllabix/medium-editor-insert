@@ -37,7 +37,7 @@
         var editor = new MediumEditor('.editable', {
         	extensions: {
                     'mediumEditorInsert': new MediumEditorInsert({
-                        uploader: new s3upload('mybucket')
+                        uploader: new s3upload('mybucket', 'https://aop-design.cqlcorp.net/api/Aws/S3CorsUploadSignature?bucketType=blog&keyPrefix=whatever')
                     })
                 }
         });

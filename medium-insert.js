@@ -11,6 +11,7 @@
 
     var mediaInserter = function() {};
     var mediaDisabler = function() {};
+    var deactivateMediaFmt = function() {};
 
 	/**
 	*
@@ -24,18 +25,42 @@
 		this.uploader = options.uploader || {};
 
 		this.init = function(mediumEditor) {
-			this.editorNode = mediumEditor.elements[0];
-			this.addToolBar();
-			this.base.subscribe('focus', this.positionToolBar.bind(this));
-		    this.base.subscribe('editableInput', this.positionToolBar.bind(this));
+			this.editorNode = this.base.elements[0];
+			this.addInsertButton();
+			this.base.subscribe('focus', this.positionInsertBtn.bind(this));
+		    this.base.subscribe('editableInput', this.positionInsertBtn.bind(this));
 		    this.base.subscribe('editableDrop', this.handleDrop);
+		    this.base.subscribe('editableKeydownDelete', this.watchForMediaElementDelete.bind(this));
 		    this.editorNode.focus();
+
+		    this.mediaToolBar = (function(){
+		    	var toolbar = document.createElement('div');
+		    	toolbar.id = 'medium-insert-media-toolbar';
+		    	toolbar.className = 'medium-editor-toolbar stalker-toolbar medium-toolbar-arrow-under';
+		    	document.getElementsByTagName('body')[0].appendChild(toolbar);
+		    	var buttonList = document.createElement('ul');
+		    	var buttons = [{type:'left', icon: 'left-align'}, {type:'full', icon: 'center-align'}, {type:'right', icon: 'right-align'}];
+		    	for (i=0;i<buttons.length;i++) {
+		    		var li = document.createElement('li');
+		    		toolbar.appendChild(li);
+		    		var btn = document.createElement('button');
+		    		btn.className = 'medium-editor-action medium-editor-action-'+buttons[i].type;
+		    		btn.setAttribute('data-action', buttons[i].type);
+		    		btn.innerHTML = '<i class="icon-'+buttons[i].icon+'"></i>';
+		    		li.appendChild(btn);
+		    		btn.addEventListener('click', this.formatMediaContainer.bind(this, btn));
+		    	}
+
+		    	return toolbar;
+		    }).bind(this)();
 		}
 
 		this.mediaOpts = {
 	  		toolbar: '',
 	  		active: false
 	  	}
+
+	  	this.activeMediaContainer = '';
 
 	  	this.file = (function(){
 	        var file = document.createElement('input');
@@ -47,11 +72,37 @@
     	}).bind(this)();
 	}
 
+
 	MediumEditorInsert.prototype.addImage = function(evt) {
+		var img = document.createElement('img');
+		img.className = 'inset-blog-photo full';
+		var reader = new FileReader();
+		reader.onload = function(e) {
+			img.src = e.target.result;
+		}
+		var file = evt.target.files[0];
+		reader.readAsDataURL(file);
+
+		sel = window.getSelection();
+		range = sel.getRangeAt(0);
+		range.insertNode(img);
+		range.setStartAfter(img);
+		range.setEndAfter(img);
+		sel.removeAllRanges();
+		sel.addRange(range);
+		this.base.elements[0].focus();
+		img.addEventListener('click', this.videoFormatter.bind(this, img));
+
 		if (typeof this.uploader.upload === 'undefined') {
 			console.warn('Uploader has not implemented method upload, falling back to non persisted data uri');
 		} else {
-			this.uploader.upload(evt);
+			this.uploader.upload(evt, function(res){
+				if (res.success) {
+					img.src = res.url;
+				} else {
+					console.log('image failed...');
+				}
+			});
 		}
 	};
 
@@ -59,7 +110,7 @@
 		this.file.click();
 	};
 
-	MediumEditorInsert.prototype.addToolBar = function() {
+	MediumEditorInsert.prototype.addInsertButton = function() {
 		var editableCoords = this.editorNode.getBoundingClientRect();
 	  	var body = document.getElementsByTagName('body')[0];
 	  	var mediaOpts = document.createElement('div');
@@ -88,7 +139,14 @@
 		mediaOpts.appendChild(videoBtn);
 	};
 
-	MediumEditorInsert.prototype.positionToolBar = function(data, editable) {
+	MediumEditorInsert.prototype.formatMediaContainer = function(btn) {
+		var action = btn.getAttribute('data-action');
+		this.activeMediaContainer.className = this.activeMediaContainer.className.replace(/\s(left|full|right)/g, '');
+		this.activeMediaContainer.className += ' ' + action;
+		this.positionMediaToolBar();
+	};
+
+	MediumEditorInsert.prototype.positionInsertBtn = function(data, editable) {
 	  	var editableCoords = editable.getBoundingClientRect();
 		var sel = window.getSelection(), range;
 		  	if (sel && sel.rangeCount > 0) {
@@ -99,11 +157,11 @@
 			  	range.insertNode(el);
 			  	var newCoords = el.getBoundingClientRect();
 			  	el.parentNode.removeChild(el);
-			  	this.mediaOpts.toolbar.style['top'] = newCoords.top - 2 + 'px';
+			  	this.mediaOpts.toolbar.style['top'] = newCoords.top + window.scrollY - 4 + 'px';
 			  	this.mediaOpts.toolbar.style['left'] = editableCoords.left - 31 +'px';
 		  	}
-	 };
 
+	 };
 
 	 MediumEditorInsert.prototype.disableVideoInsert = function(el) {
 	    	var that = this;
@@ -151,22 +209,80 @@
 	    }
 	};
 
+
+	MediumEditorInsert.prototype.deactivateMediaContainerFormatting = function() {
+		this.activeMediaContainer.className = this.activeMediaContainer.className.replace(/(\sselected|selected)/g, '');
+		this.mediaToolBar.style['visibility'] = 'hidden';
+		this.base.unsubscribe('editableInput', deactivateMediaFmt);
+	}
+
+	MediumEditorInsert.prototype.activateMediaContainerFormatting = function(container) {
+		deactivateMediaFmt = this.deactivateMediaContainerFormatting.bind(this);
+		if (this.activeMediaContainer !== '') {
+			deactivateMediaFmt();
+		}
+		this.activeMediaContainer = container;
+		this.mediaToolBar.style['visibility'] = 'visible';
+		this.base.subscribe('editableInput', deactivateMediaFmt);
+		this.positionMediaToolBar();
+	};
+
+	MediumEditorInsert.prototype.positionMediaToolBar = function() {
+		var container = this.activeMediaContainer;
+		var toolbar = this.mediaToolBar;
+
+		var coords = container.getBoundingClientRect()
+		toolbar.style['top'] = (coords.top + window.scrollY) - (toolbar.offsetHeight + 10) + 'px';
+		var mediaHalf = Math.floor(toolbar.offsetWidth / 2);
+		var center = Math.floor(container.offsetWidth / 2) + coords.left - mediaHalf + 'px';
+		toolbar.style['left'] = center;
+	};
+
+	MediumEditorInsert.prototype.watchForMediaElementDelete = function() {
+		var node = document.getSelection().anchorNode
+		if (typeof node.className !== 'undefined') {
+			if (node.className.indexOf('video-container') > -1) {
+				node.parentNode.removeChild(node);
+				return
+			}
+		}
+	}
+
+	MediumEditorInsert.prototype.videoFormatter = function(container) {
+		if (container.className.indexOf('selected') > -1) {
+			container.className = container.className.replace(/\sselected/g, '');
+		} else {
+			this.editorNode.blur();
+			container.className += ' selected';
+			this.activateMediaContainerFormatting(container);
+		}
+	};
+
 	MediumEditorInsert.prototype.insertVideo = function(e, editable) {
 		e.preventDefault();
 		var text = (e.originalEvent || e).clipboardData.getData('text/plain');
 		var url = this.getVideoUrl(text);
 		if (!url) { return }
+
 		var frame = document.createElement('iframe');
-		frame.style['float'] = 'left';
-		frame.style['padding-right'] = '10px';
 		frame.src = url;
-		frame.width = 400;
-		frame.height = 224;
+		frame.width = '100%';
+		frame.height = '100%';
 		frame.frameBorder = 0;
+
+		var container = document.createElement('div')
+		container.className = 'video-container full';
+		container.addEventListener('click', this.videoFormatter.bind(this, container));
+
 
 		sel = window.getSelection();
 		range = sel.getRangeAt(0);
-		range.insertNode(frame);
+		range.insertNode(container);
+		container.appendChild(frame);
+		range.setStartAfter(container);
+		range.setEndAfter(container);
+		sel.removeAllRanges();
+		sel.addRange(range);
 		this.base.elements[0].focus();
 		this.base.unsubscribe('editablePaste', mediaInserter);
 	};
