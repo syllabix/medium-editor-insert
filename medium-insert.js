@@ -31,7 +31,6 @@
 		    this.base.subscribe('editableInput', this.positionInsertBtn.bind(this));
 		    this.base.subscribe('editableDrop', this.handleDrop);
 		    this.base.subscribe('editableKeydownDelete', this.watchForMediaElementDelete.bind(this));
-		    this.editorNode.focus();
 
 		    this.mediaToolBar = (function(){
 		    	var toolbar = document.createElement('div');
@@ -57,7 +56,8 @@
 
 		this.mediaOpts = {
 	  		toolbar: '',
-	  		active: false
+	  		active: false,
+	  		loaded: true
 	  	}
 
 	  	this.activeMediaContainer = '';
@@ -91,7 +91,7 @@
 		sel.removeAllRanges();
 		sel.addRange(range);
 		this.base.elements[0].focus();
-		img.addEventListener('click', this.videoFormatter.bind(this, img));
+		img.addEventListener('click', this.mediaFormatter.bind(this, img));
 
 		if (typeof this.uploader.upload === 'undefined') {
 			console.warn('Uploader has not implemented method upload, falling back to non persisted data uri');
@@ -117,6 +117,7 @@
 	  	mediaOpts.id = 'media-opts';
 	  	mediaOpts.style['top'] = editableCoords.top - 2 + 'px';
 		mediaOpts.style['left'] = editableCoords.left - 31 +'px';
+		//mediaOpts.style['display'] = 'none';
 		body.appendChild(mediaOpts)
 		this.mediaOpts.toolbar = mediaOpts;
 
@@ -160,7 +161,6 @@
 			  	this.mediaOpts.toolbar.style['top'] = newCoords.top + window.scrollY - 4 + 'px';
 			  	this.mediaOpts.toolbar.style['left'] = editableCoords.left - 31 +'px';
 		  	}
-
 	 };
 
 	 MediumEditorInsert.prototype.disableVideoInsert = function(el) {
@@ -209,7 +209,6 @@
 	    }
 	};
 
-
 	MediumEditorInsert.prototype.deactivateMediaContainerFormatting = function() {
 		this.activeMediaContainer.className = this.activeMediaContainer.className.replace(/(\sselected|selected)/g, '');
 		this.mediaToolBar.style['visibility'] = 'hidden';
@@ -248,7 +247,7 @@
 		}
 	}
 
-	MediumEditorInsert.prototype.videoFormatter = function(container) {
+	MediumEditorInsert.prototype.mediaFormatter = function(container) {
 		if (container.className.indexOf('selected') > -1) {
 			container.className = container.className.replace(/\sselected/g, '');
 		} else {
@@ -272,7 +271,7 @@
 
 		var container = document.createElement('div')
 		container.className = 'video-container full';
-		container.addEventListener('click', this.videoFormatter.bind(this, container));
+		container.addEventListener('click', this.mediaFormatter.bind(this, container));
 
 
 		sel = window.getSelection();

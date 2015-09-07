@@ -26,7 +26,7 @@
     </head>
     <body>
         <h1>Medium Editor Insert Demo</h1>
-        <div class="editable" contenteditable="true">
+        <div class="editable clearfix" contenteditable="true">
 
         </div>
 
@@ -36,9 +36,7 @@
         <script>
         var editor = new MediumEditor('.editable', {
         	extensions: {
-                    'mediumEditorInsert': new MediumEditorInsert({
-                        uploader: new s3upload('mybucket', 'https://aop-design.cqlcorp.net/api/Aws/S3CorsUploadSignature?bucketType=blog&keyPrefix=whatever')
-                    })
+                    'mediumEditorInsert': new MediumEditorInsert()
                 }
         });
         </script>
